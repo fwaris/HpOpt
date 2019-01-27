@@ -1,4 +1,7 @@
 ﻿namespace HpOptimizerCore
+
+//server to handle named pipe clients
+
 open System.IO.Pipes
 open MBrace.FsPickler
 open Microsoft.ML

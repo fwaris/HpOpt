@@ -3,6 +3,8 @@ open System.IO.Pipes
 open MBrace.FsPickler
 open Microsoft.ML
 
+//helper functions for client processes to communicate with the server
+
 type ClientMessage = Operation * AsyncReplyChannel<Operation>
 
 
