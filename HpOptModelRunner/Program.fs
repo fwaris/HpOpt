@@ -11,7 +11,9 @@ module Pgm =
     let p_leaves = "leaves"
     let p_learningRate = "learningRate"
 
-    //define the hyperparamters that need to be optimized
+    //***********
+    //A: Define hyperparameters that parameterize your model
+    //**********
     let hyperParameters : IValueGenerator[] = 
         [|
             FloatParamArguments (Name=p_trees, Min=5.0f, Max=100.0f, StepSize=Nullable 5.0 )
@@ -22,37 +24,20 @@ module Pgm =
         |> Array.map (fun x -> FloatValueGenerator(x) :> _) 
 
 
-    //define a wrapper method to train model 
-    //that deals with conversion from/to sweeper 
-    //interface objects
+    //***********
+    //B: Define a function that accepts a ParameteSet; trains your model; and returns a RunResult
+    //**********
     let trainWithParms (parmSet:ParameterSet) =
+
+        //parmSet contains the values of the hyperparameters proposed by the server
         let trees           = parmSet.[p_trees].ValueText        |> float |> int
         let leaves          = parmSet.[p_leaves].ValueText       |> float |> int
         let learningRate    = parmSet.[p_learningRate].ValueText |> float
+
         let auc = Train.trainModel trees leaves learningRate
+
         RunResult(parmSet, auc, true)
 
-    let run sweep = sweep |> Option.map(fun {Id=i; Parms=p} -> {Id=i; Result=p |> ParameterSet |>  trainWithParms})
-
-    //loop to continually run the parameter search
-    //search ends when server terminates the pipe
-    let runModel namedPipe  =
-        let pipe = Client.openPipe namedPipe
-        pipe.Connect()
-        let agent = Client.agent pipe
-        let mutable lastRslt = None
-        async {
-            try 
-                    let! initSweep = Client.initServer agent 1000 hyperParameters 
-                    lastRslt <- run initSweep
-                    while true do
-                        if lastRslt.IsNone then
-                            do! Async.Sleep 5000 // wait 
-                        let! sweep = Client.propose agent 1  lastRslt
-                        lastRslt <- run sweep
-            with ex -> 
-                pipe.Close()
-            }
 
     [<EntryPoint>]
     let main argv =
@@ -64,7 +49,11 @@ module Pgm =
                 printfn "using default namedPipeName %s" Defaults.pipeName
                 Defaults.pipeName
 
-        runModel namedPipe |> Async.Start
+        //***********
+        //C: In the 'main' function start Client.runModel with the correct namedPipe name, hyperparameters & trainer function
+        //**********
+        Client.runModel namedPipe hyperParameters trainWithParms |> Async.Start
+
         while Console.ReadKey().KeyChar <> 'q' do
             Console.WriteLine("press q to quit")
         0 // return an integer exit code

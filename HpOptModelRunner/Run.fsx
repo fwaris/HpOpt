@@ -4,6 +4,7 @@ open System
 let namedPipe = "model1"
 let outputPath = @"C:\s\repodata\hpto\model_1.xml"
 let maxIter  =  1000
+let batchSize = 10
 
 let spawn cmdLine =
     let pi = ProcessStartInfo()
@@ -17,9 +18,9 @@ let spawn cmdLine =
 let serverDll = @"C:\s\Repos\hpto\HpOptServer\bin\Debug\netcoreapp2.1\HpOptServer.dll"
 let clientDll = @"C:\s\Repos\hpto\HpOptModelRunner\bin\Debug\netcoreapp2.1\HpOptModelRunner.dll"
 
-let serverCmd = sprintf "%s %s %s %d" serverDll namedPipe outputPath maxIter
+let serverCmd = sprintf "%s %s %s %d %d" serverDll namedPipe outputPath maxIter batchSize
 let clientCmd = sprintf "%s %s" clientDll namedPipe
 
 spawn serverCmd
-for i in 1 .. 10 do
+for i in 1 .. batchSize do
     spawn clientCmd

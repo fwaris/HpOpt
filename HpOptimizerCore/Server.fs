@@ -4,7 +4,7 @@ open MBrace.FsPickler
 open Microsoft.ML
 open Microsoft.ML.Sweeper
 
-type HpInit      = {MaxHistory: int; Parms:IValueGenerator[]}
+type HpInit      = {Parms:IValueGenerator[]}
 type HpRunParms  = {Id:int; Parms:IParameterValue[]}
 type HpRunResult = {Id:int; Result:IRunResult}
 
@@ -14,7 +14,7 @@ type Operation =
     | Server_ProposeSweeps of HpRunResult option
     //to client
     | Client_RunParameters of HpRunParms option
-
+    | Client_ServerDone
 
 type Message = Operation * AsyncReplyChannel<bool*Operation>
 
